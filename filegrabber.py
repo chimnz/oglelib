@@ -124,6 +124,7 @@ class FileGrabber(object):
     or else uses environment variable OGLEDATADIR as default search path.'''
     def __init__(self, datadir=None, ftp_enabled=False):
         self.datadir = self.__verify_datadir(datadir)
+        self.ftpclient = None
         if ftp_enabled:
             self.ftpclient = FTP(ftp_url)
             self.ftpclient.login()
@@ -158,18 +159,19 @@ class FileGrabber(object):
         and dat_type. Search specified datadir before attempting to retrieve
         datfile contents from ogle ftp server.'''
         rdf = RemoteDatFile(year, n, field, dat_type)
-
-        if self.datadir is not None:  # data directory provided
+        contents = None
+        if self.datadir:  # data directory provided
             local_filepath = self.__get_local_filepath(year, n, field, dat_type)
             if os.path.isfile(local_filepath):  # file already downloaded, use this file
                 with open(local_filepath, 'r') as f:
                     contents = f.read()
-            else:  # file not yet downloaded, download file
+            elif self.ftpclient:  # file not yet downloaded, download file
                 contents = rdf.get_contents(self.ftpclient)
-        else:  # no data directory provided, download file
-            contents = rdf.get_contents(self.ftpclient)
-        datfile = DatFile(rdf.fileurl, contents)
-        return(datfile)
+        if contents:
+            datfile = DatFile(rdf.fileurl, contents)
+            return(datfile)
+        else:
+            raise Exception("datfile is nonlocal and/or ftp is not enabled")
 
     def __force_write(self, filepath, s):
         '''Write string [s] to filepath [filepath] no matter what.'''

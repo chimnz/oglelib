@@ -1,11 +1,11 @@
 from oglelib.filegrabber import padded_n, FileGrabber
 from oglelib.parse import PhotParser, ParamsParser
 from oglelib.calculations import Lightcurve, reduced_chi_square, ra, dec, pgram
-import matplotlib.pyplot as plt
-import numpy as np
+from matplotlib.pyplot import rcParams, figure
+from numpy import where, sqrt
 from os import environ
 
-plt.rcParams.update({'figure.max_open_warning': 0})  # suppress too many open figures warning
+rcParams.update({'figure.max_open_warning': 0})  # suppress too many open figures warning
 
 class Event(object):
     def __init__(self, year, n, field='blg', fgrabber=None, sigmamin=0.0):
@@ -55,12 +55,12 @@ class Event(object):
 
         if cleanse:
             ## remove placeholder values
-            ind = np.where(I < 25)
+            ind = where(I < 25)
             t = t[ind]
             I = I[ind]
             Ierr = Ierr[ind]
             ## implement Ierr quadrature correction
-            Ierr = np.sqrt(Ierr**2 + self.sigmamin**2)  # Ierr_tot
+            Ierr = sqrt(Ierr**2 + self.sigmamin**2)  # Ierr_tot
 
         return t, I, Ierr
 
@@ -88,7 +88,7 @@ class Event(object):
         lc = self.lightcurve
 
         # create figure
-        fig = plt.figure(**kwargs)
+        fig = figure(**kwargs)
         axes = fig.add_subplot(1,1,1)  # first two args are grid dimensions and last arg is location number
 
         # prepare data
@@ -138,7 +138,7 @@ class Event(object):
 
     def pgramplot(self, **kwargs):
         pgram = self.pgram()
-        fig = plt.figure()
+        fig = figure()
 
         axes = fig.add_subplot(1,1,1)  # first two args are grid dimensions and last arg is location number
         axes.plot(pgram['freq'], pgram['pgram'])
@@ -147,9 +147,3 @@ class Event(object):
         axes.set_ylabel('pgram')
         axes.set_title(self.title)
         return fig
-
-
-
-
-
-
